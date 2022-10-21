@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="bootstrap.min.css">
+
+  <script type="module">
+    import createTodoApp from './scripts/view.js';
+
+    const button = document.querySelector('.btn');
+    const keyName = 'myList';
+
+    let source = localStorage.getItem('source') || 'ls';
+
+    if (source === 'ls') {
+      runLsApi();
+    } else if (source === 'server') {
+      runServerApi();
+    }
+
+    button.addEventListener('click', () => {
+      let source = localStorage.getItem('source') || 'ls';
+      if (source === 'ls') {
+        localStorage.setItem('source', 'server');
+
+        runServerApi()
+      } else if (source === 'server') {
+        localStorage.setItem('source', 'ls');
+        runLsApi()
+      }
+    })
+
+
+
+    async function runServerApi() {
+      let { getTodoList,
+        createTodoItem,
+        switchTodoItemDone,
+        deleteTodoItem, } = await import('./scripts/server-api.js');
+
+      button.textContent = 'Switch to local storage';
+      (async () => {
+        const itemsArray = await getTodoList(keyName);
+        createTodoApp(document.getElementById('todo-app'), {
+          title: 'Мои дела',
+          keyName,
+          itemsArray,
+          onCreateFormSubmit: createTodoItem,
+          onDoneClick: switchTodoItemDone,
+          onDeleteClick: deleteTodoItem,
+        });
+      })();
+    }
+
+    async function runLsApi() {
+      let { getTodoListLocal,
+        createTodoItemLocal,
+        switchTodoItemDoneLocal,
+        deleteTodoItemLocal, } = await import('./scripts/ls-api.js');
+
+      button.textContent = 'Switch to server';
+      (async () => {
+        const itemsArray = await getTodoListLocal(keyName);
+        createTodoApp(document.getElementById('todo-app'), {
+          title: 'Мои дела',
+          keyName,
+          itemsArray,
+          onCreateFormSubmit: createTodoItemLocal,
+          onDoneClick: switchTodoItemDoneLocal,
+          onDeleteClick: deleteTodoItemLocal,
+        });
+      })();
+    }
+
+
+
+
+
+  </script>
+</head>
+
+<body>
+  <div class="container mb-5 pt-1">
+    <nav class="nav">
+      <ul class="mr-auto d-flex list-unstyled">
+        <li><a href="index.html" class="nav-link">Мои дела</a></li>
+        <li><a href="dad.html" class="nav-link">Дела папы</a></li>
+        <li><a href="mom.html" class="nav-link">Дела мамы</a></li>
+      </ul>
+      <button class="btn btn-primary">Switch</button>
+    </nav>
+  </div>
+  <div id="todo-app" class="container"></div>
+</body>
+
+</html>
